@@ -1,0 +1,76 @@
+=============================================================================
+ ZMIANY — wersja "do oceny 4.5"
+=============================================================================
+
+Jeden program (symulator.exe) robi wszystko po kolei:
+  1) wczytuje konfiguracja.txt: 5 wykonawców i strategie do porównania,
+  2) generuje 3 pliki zgłoszeń po 12 000 zleceń (ziarno 2026):
+       zgloszenia_male.txt (25/h), zgloszenia_rownowaga.txt (45/h),
+       zgloszenia_przeciazenie.txt (60/h),
+  3) każdy plik wczytuje i puszcza przez FIFO, HPF i AGING,
+  4) liczy serię natężeń 15, 20, ..., 65 zleceń/h (tylko w pamięci).
+Wyniki: wyniki.txt (czytelne tabele, to samo co na ekranie),
+        wyniki.csv i obciazenie.csv (te same liczby do wykresów).
+
+
+-----------------------------------------------------------------------------
+CO ZMIENIŁEM
+-----------------------------------------------------------------------------
+  - Symulator.cpp: dziennik [t=...] naprawdę się wyłącza. Wcześniej stare
+    std::cout stały POZA "if (dziennik_)", więc eksperymenty wypisywały
+    ok. 270 000 linii, a czas_ms mierzył głównie pisanie na ekran.
+    Teraz dziennik jest domyślnie wyłączony (Symulator.h).
+  - Jedna konfiguracja: konfiguracja.txt ma 5 wykonawców z eksperymentów
+    i linię "strategia FIFO HPF AGING" (program porówna te, które wpiszesz).
+    Wczytywanie.h/.cpp: Konfiguracja ma teraz listę "strategie".
+  - Mały przykład (zgloszenia.txt, 2 wykonawców) usunięty.
+  - Generator jest teraz modułem (Generator.h + Generator.cpp, duża litera
+    jak w CMakeLists): generujZlecenia() i zapiszZlecenia(). N = 12 000,
+    bo wymóg to N > 10 000 (10 000 nie spełniało).
+  - main.cpp: dawny Eksperymenty.cpp + generator + seria obciążenia.
+  - Statystyki: zamiast tabeli pojedynczych zleceń (bez sensu przy 12 000)
+    są funkcje wypiszNaglowekTabeli / wypiszWierszTabeli / wypiszPriorytety,
+    piszące do std::ostream& (raz ekran, raz plik). Procent spóźnionych
+    liczy się w policzStatystyki().
+  - FabrykaStrategii.h: domyślny okres AGING 1800 s, tak samo jak w main.cpp.
+  - Usunięte stare komentarze "TODO (krok 3)".
+  - CMakeLists.txt: jeden cel "symulator"; .gitignore: dopisane out/ i .vs/.
+
+
+-----------------------------------------------------------------------------
+CO ZROBIĆ U SIEBIE
+-----------------------------------------------------------------------------
+  [ ] W swoim folderze USUŃ: Eksperymenty.cpp, generator.cpp (mała litera),
+      konfiguracja_eksperymenty.txt, zgloszenia.txt. Potem skopiuj pliki
+      z tego archiwum.
+  [ ] Visual Studio: Projekt -> "Usuń pamięć podręczną i skonfiguruj ponownie"
+      (programy eksperymenty.exe i generator.exe już nie istnieją).
+  [ ] Jako element startowy wybierz symulator.exe i uruchom.
+  [ ] Pliki wyników będą w out\build\x64-Debug. Do czasów [ms] lepiej x64-Release.
+  [ ] Archiwum do oddania pakuj BEZ folderów .vs i out (to setki MB śmieci,
+      Visual Studio odtworzy je samo).
+
+
+-----------------------------------------------------------------------------
+CO ZOSTAJE DO SPRAWOZDANIA (bez tego nie ma oceny)
+-----------------------------------------------------------------------------
+  [ ] Tabele porównawcze FIFO / HPF / AGING dla 3 zestawów (z wyniki.txt).
+  [ ] Wykres: średnie oczekiwanie w funkcji obciążenia (obciazenie.csv,
+      oś X = zlecenia/h albo wykorzystanie, oś Y logarytmiczna).
+  [ ] Głodzenie: średnie wg priorytetu (wyniki.txt). U mnie przy zestawie
+      "rownowaga": HPF prio1 ok. 1552 s, prio5 ok. 174 s; AGING 1058 / 271 s.
+  [ ] Przypadki brzegowe: brak pliku, zła linia, nieznana strategia lub
+      specjalizacja, przeciążenie (kolejka rośnie bez końca).
+  [ ] Podstawowa analiza złożoności: sortowanie O(N log N), kalendarz O(log K),
+      kolejka FIFO O(1), HPF/AGING O(log m), wybór wykonawcy O(K);
+      razem O(N log N + N·K), pamięć O(N + K).
+  [ ] Opis sortowania i wstawiania (std::sort w konstruktorze Symulatora,
+      push/pop kopca w HPF, AGING i w kalendarzu zdarzeń).
+
+Uwaga do wykresu: przy dużym przeciążeniu (55-65/h) wykorzystanie SPADA.
+To nie błąd: po ostatnim nadejściu wąskie gardło (kompletacja, pakowanie,
+chłodnia) długo rozładowuje kolejkę, a Adam (tylko WOZEK) w tym czasie stoi.
+
+Twoje liczby mogą się trochę różnić od moich (sprawdzałem na Linuksie, g++):
+każdy kompilator liczy rozkłady z <random> po swojemu. Wnioski będą te same.
+CO_DALEJ.txt to stara lista kroków z początku projektu - możesz go usunąć.

@@ -1,0 +1,10 @@
+# Jedna konfiguracja dla calego programu.
+# strategia: jedna lub kilka z FIFO, HPF, AGING - program porowna wszystkie wpisane
+strategia FIFO HPF AGING
+
+# wykonawca  NAZWA  TEMPO  UMIEJETNOSCI (jedna lub kilka)
+wykonawca  Sieciech    1.0  KOMPLETACJA WOZEK
+wykonawca  Msciwoj    1.0  KOMPLETACJA PAKOWANIE
+wykonawca  Boguslawa    1.0  PAKOWANIE KOMPLETACJA
+wykonawca  Hipolit   1.0  WOZEK KOMPLETACJA
+wykonawca  Antonina  1.0  BRYGADZISTA KOMPLETACJA PAKOWANIE WOZEK
